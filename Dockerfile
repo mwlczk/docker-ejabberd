@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM alpine:3.7
 MAINTAINER Marek Walczak <Marek.W@lczak.net>
 
 ENV EJABBERD_BRANCH=17.11 \
@@ -17,56 +17,55 @@ ENV EJABBERD_BRANCH=17.11 \
     LANGUAGE=en_US.UTF-8 \
     GOSU_VERSION=1.10
 
-# Add ejabberd user and group
-RUN groupadd -r $EJABBERD_USER \
-    && useradd -r -m \
-       -g $EJABBERD_USER \
-       -d $EJABBERD_HOME \
-       $EJABBERD_USER
-
 # Install packages and perform cleanup
-RUN set -x \
-    && buildDeps=' \
+RUN apk -U upgrade \
+ && apk add -t buildDep \
         automake \
-        build-essential \
+        autoconf \
+        build-base \
         ca-certificates \
-        dirmngr \
-        erlang-src erlang-dev \
-        git-core \
-        gpg \
-        libexpat-dev \
-        libgd-dev \
-        libssl-dev \
-        libsqlite3-dev \
+        # dirmngr \
+        erlang-dev \
+        git \
+        gnupg \
+        expat-dev \
+        gd-dev \
         libwebp-dev \
-        libyaml-dev \
+        openssl-dev \
+        shadow \
+        sqlite-dev \
+        yaml-dev \
         wget \
-        zlib1g-dev \
-    ' \
-    && requiredAptPackages=' \
-        erlang-base-hipe erlang-snmp erlang-ssl erlang-ssh \
-        erlang-tools erlang-xmerl erlang-corba erlang-diameter erlang-eldap \
+        zlib-dev \
+  && apk add \
+        bind-tools \
+        erlang-hipe erlang-stdlib erlang-snmp erlang-ssl erlang-ssh \
+        erlang-tools erlang-xmerl erlang-diameter erlang-eldap \
         erlang-eunit erlang-ic erlang-odbc erlang-os-mon \
         erlang-parsetools erlang-percept erlang-typer \
         imagemagick \
         inotify-tools \
-        libgd3 \
-        libwebp6 \
-        libyaml-0-2 \
-        locales \
-        ldnsutils \
+        libgd \
+        libwebp \
         openssl \
-        python2.7 \
-        python-jinja2 \
-        python-mysqldb \
-    ' \
-    && apt-get update \
-    && apt-get install -y $buildDeps $requiredAptPackages --no-install-recommends \
-    && dpkg-reconfigure locales && \
-        locale-gen C.UTF-8 \
-    && /usr/sbin/update-locale LANG=C.UTF-8 \
-    && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
-    && locale-gen \
+        python2 \
+        yaml
+        # python-jinja2 \
+        # python-mysqldb \
+        # erlang-corba locales
+        # erlang-src
+    # && dpkg-reconfigure locales && \
+    #     locale-gen C.UTF-8 \
+    # && /usr/sbin/update-locale LANG=C.UTF-8 \
+    # && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
+    # && locale-gen \
+    # Add ejabberd user and group
+RUN mkdir -p $EJABBERD_HOME \
+    && groupadd -r $EJABBERD_USER \
+    && useradd -r -m \
+       -g $EJABBERD_USER \
+       -d $EJABBERD_HOME \
+       $EJABBERD_USER \
     && cd /tmp \
     && git clone https://github.com/processone/ejabberd.git \
         --branch $EJABBERD_BRANCH --single-branch --depth=1 \
