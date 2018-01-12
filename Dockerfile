@@ -1,7 +1,7 @@
 FROM alpine:3.7
 MAINTAINER Marek Walczak <Marek.W@lczak.net>
 
-ENV EJABBERD_BRANCH=17.11 \
+ENV EJABBERD_BRANCH=18.01 \
     EJABBERD_USER=ejabberd \
     EJABBERD_HTTPS=true \
     EJABBERD_STARTTLS=true \
@@ -18,8 +18,8 @@ ENV EJABBERD_BRANCH=17.11 \
     GOSU_VERSION=1.10
 
 # Install packages and perform cleanup
-RUN apk -U upgrade \
- && apk add -t buildDep \
+RUN apk -U upgrade --update musl && \
+    apk add -t buildDep \
         automake \
         autoconf \
         build-base \
@@ -30,6 +30,8 @@ RUN apk -U upgrade \
         gnupg \
         expat-dev \
         gd-dev \
+        jpeg-dev \
+        libpng-dev \
         libwebp-dev \
         openssl-dev \
         shadow \
@@ -38,20 +40,23 @@ RUN apk -U upgrade \
         wget \
         zlib-dev \
   && apk add \
+        bash \
         bind-tools \
-        erlang-hipe erlang-stdlib erlang-snmp erlang-ssl erlang-ssh \
+        elixir \
+        erlang-erts erlang-mnesia erlang-snmp erlang-ssl erlang-ssh \
         erlang-tools erlang-xmerl erlang-diameter erlang-eldap \
-        erlang-eunit erlang-ic erlang-odbc erlang-os-mon \
-        erlang-parsetools erlang-percept erlang-typer \
+        erlang-syntax-tools erlang-eunit erlang-ic erlang-odbc erlang-os-mon \
+        erlang-parsetools erlang-crypto \
+        erlang-runtime-tools erlang-reltool \
         imagemagick \
         inotify-tools \
         libgd \
         libwebp \
         openssl \
         python2 \
+        py-jinja2 \
+        py-mysqldb \
         yaml
-        # python-jinja2 \
-        # python-mysqldb \
         # erlang-corba locales
         # erlang-src
     # && dpkg-reconfigure locales && \
@@ -60,6 +65,8 @@ RUN apk -U upgrade \
     # && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
     # && locale-gen \
     # Add ejabberd user and group
+RUN mix local.hex --force && \
+    mix local.rebar --force
 RUN mkdir -p $EJABBERD_HOME \
     && groupadd -r $EJABBERD_USER \
     && useradd -r -m \
@@ -95,9 +102,9 @@ RUN mkdir -p $EJABBERD_HOME \
     && wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt \
     && update-ca-certificates \
     && set -ex \
-    && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
-    && wget -O /usr/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
-    && wget -O /usr/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
+    # && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
+    && wget -O /usr/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
+    && wget -O /usr/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64.asc" \
 # verify the signature
     && export GNUPGHOME="$(mktemp -d)" \
     && for server in $(shuf -e ha.pool.sks-keyservers.net \
@@ -112,8 +119,8 @@ RUN mkdir -p $EJABBERD_HOME \
     && gosu nobody true \
 # cleanup
     && rm -r "$GNUPGHOME" /usr/bin/gosu.asc \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get purge -y --auto-remove $buildDeps
+    && apk del buildDep \
+    && rm -rf /var/cache/apk/* /tmp/* /root/.gnupg
 
 # Create logging directories
 RUN mkdir -p /var/log/ejabberd
@@ -122,6 +129,7 @@ RUN touch /var/log/ejabberd/crash.log /var/log/ejabberd/error.log /var/log/ejabb
 # Wrapper for setting config on disk from environment
 # allows setting things like XMPP domain at runtime
 ADD ./run.sh /sbin/run
+RUN chmod +x /sbin/run
 
 # Add run scripts
 ADD ./scripts $EJABBERD_HOME/scripts
