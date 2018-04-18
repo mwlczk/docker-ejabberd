@@ -69,7 +69,7 @@ RUN set -x \
     && locale-gen \
     && cd /tmp \
     && git clone https://github.com/processone/ejabberd.git \
-        --branch $EJABBERD_BRANCH --single-branch --depth=1 \
+        # --branch $EJABBERD_BRANCH --single-branch --depth=1 \
     && cd ejabberd \
     && chmod +x ./autogen.sh \
     && ./autogen.sh \

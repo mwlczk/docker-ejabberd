@@ -403,7 +403,8 @@ modules:
       - "flat"
       - "hometree"
       - "pep" # pep requires mod_caps
-  mod_push: {}
+  mod_push:
+    include_body: "New message"
   mod_push_keepalive: {}
   ## mod_register:
     ##
