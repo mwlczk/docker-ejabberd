@@ -394,6 +394,9 @@ modules:
     port: 5277
   mod_pubsub:
     access_createnode: pubsub_createnode
+    force_node_config:
+      "eu.siacs.conversations.axolotl.*":
+        access_model: open
     ## reduces resource comsumption, but XEP incompliant
     ignore_pep_from_offline: true
     ## XEP compliant, but increases resource comsumption
@@ -439,6 +442,16 @@ modules:
     versioning: true
   mod_s2s_dialback: {}
   mod_shared_roster: {}
+  # mod_shared_roster_ldap:
+  #   ldap_base: "ou=groups,dc=lczak,dc=net"
+  #   ldap_rfilter: "(objectClass=groupOfNames)"
+  #   ldap_filter: ""
+  #   ldap_gfilter: "(&(objectClass=groupOfNames)(cn=%g)(|(cn=walczaki)(cn=garbicz)(cn=WG-Wilmsstr)))"
+  #   ldap_groupdesc: "description"
+  #   ldap_memberattr: "member"
+  #   ldap_memberattr_format: "uid=%u,ou=people,dc=lczak,dc=net"
+  #   ldap_ufilter: "(&(objectClass=inetOrgPerson)(uid=%u))"
+  #   ldap_userdesc: "uid"
   mod_stats: {}
   mod_stream_mgmt:
     resend_on_timeout: if_offline
