@@ -54,6 +54,7 @@ listen:
     {%- if env.get('EJABBERD_PROTOCOL_OPTIONS_TLSV1_1', "true") == "false" %}
       - "no_tlsv1_1"
     {%- endif %}
+      - "cipher_server_preference"
     max_stanza_size: 65536
     shaper: c2s_shaper
     access: c2s
@@ -77,6 +78,7 @@ listen:
     {%- if env.get('EJABBERD_PROTOCOL_OPTIONS_TLSV1_1', "true") == "false" %}
       - "no_tlsv1_1"
     {%- endif %}
+      - "cipher_server_preference"
     max_stanza_size: 65536
     shaper: c2s_shaper
     access: c2s
@@ -140,6 +142,7 @@ listen:
 s2s_use_starttls: required
 # s2s_certfile: "/opt/ejabberd/ssl/host.pem"
 s2s_protocol_options:
+  - "no_sslv2"
   - "no_sslv3"
   {%- if env.get('EJABBERD_PROTOCOL_OPTIONS_TLSV1', "false") == "false" %}
   - "no_tlsv1"
@@ -147,6 +150,7 @@ s2s_protocol_options:
   {%- if env.get('EJABBERD_PROTOCOL_OPTIONS_TLSV1_1', "true") == "false" %}
   - "no_tlsv1_1"
   {%- endif %}
+  - "cipher_server_preference"
 s2s_ciphers: "{{ env.get('EJABBERD_CIPHERS', 'HIGH:!aNULL:!3DES') }}"
 {%- if env.get('EJABBERD_DHPARAM', false) == "true" %}
 s2s_dhfile: "/opt/ejabberd/ssl/dh.dhpem"
@@ -456,9 +460,14 @@ modules:
   mod_stream_mgmt:
     resend_on_timeout: if_offline
   mod_time: {}
+  mod_avatar: {}
+    # convert:
+    #   default: png
   mod_vcard: {}
+  mod_vcard_xupdate: {}
   {% if env.get('EJABBERD_MOD_VERSION', true) == "true" %}
-  mod_version: {}
+  mod_version:
+    show_os: false
   {% endif %}
 
 ###   ============
