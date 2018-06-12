@@ -1,5 +1,8 @@
 FROM debian:stretch-slim
-MAINTAINER Marek Walczak <marek@walczak.io>
+MAINTAINER Rafael Römhild <rafael@roemhild.de>
+
+ARG EJABBERD_UID=999
+ARG EJABBERD_GID=999
 
 ENV EJABBERD_BRANCH=18.04 \
     EJABBERD_USER=ejabberd \
@@ -18,10 +21,11 @@ ENV EJABBERD_BRANCH=18.04 \
     GOSU_VERSION=1.10
 
 # Add ejabberd user and group
-RUN groupadd -r $EJABBERD_USER \
-    && useradd -r -m \
+RUN groupadd --gid $EJABBERD_GID $EJABBERD_USER \
+    && useradd -m \
        -g $EJABBERD_USER \
        -d $EJABBERD_HOME \
+       --uid $EJABBERD_UID \
        $EJABBERD_USER
 
 # Install packages and perform cleanup
@@ -111,7 +115,7 @@ RUN set -x \
     && chmod +sx /usr/bin/gosu \
     && gosu nobody true \
 # cleanup
-    && rm -r "$GNUPGHOME" /usr/bin/gosu.asc \
+    && rm -r /usr/bin/gosu.asc \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get purge -y --auto-remove $buildDeps
 

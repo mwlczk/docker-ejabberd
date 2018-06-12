@@ -33,7 +33,7 @@ hosts:
 ## For example, if this ejabberd serves example.org and you want
 ## to allow communication with an XMPP server called im.example.org.
 ##
-route_subdomains: s2s
+## route_subdomains: s2s
 
 ###   ===============
 ###   LISTENING PORTS
@@ -111,7 +111,6 @@ listen:
     {%- if env['EJABBERD_HTTPS'] == "true" %}
     tls: true
     tls_compression: false
-    # certfile: "/opt/ejabberd/ssl/host.pem"
     ciphers: "{{ env.get('EJABBERD_CIPHERS', 'HIGH:!aNULL:!3DES') }}"
     {%- if env.get('EJABBERD_DHPARAM', false) == "true" %}
     dhfile: "/opt/ejabberd/ssl/dh.dhpem"
@@ -121,13 +120,10 @@ listen:
     port: 5443
     module: ejabberd_http
     request_handlers:
-      "/bosh": mod_bosh
-      "/http-bind": mod_bosh
       "": mod_http_upload
     {%- if env['EJABBERD_HTTPS'] == "true" %}
     tls: true
     tls_compression: false
-    # certfile: "/opt/ejabberd/ssl/host.pem"
     ciphers: "{{ env.get('EJABBERD_CIPHERS', 'HIGH:!aNULL:!3DES') }}"
     {%- if env.get('EJABBERD_DHPARAM', false) == "true" %}
     dhfile: "/opt/ejabberd/ssl/dh.dhpem"
@@ -135,12 +131,19 @@ listen:
     {% endif %}
 
 
+###   CERTIFICATES
+###   ================
+certfiles:
+  - "/opt/ejabberd/ssl/host.pem"
+{%- for xmpp_domain in env['XMPP_DOMAIN'].split() %}
+  - "/opt/ejabberd/ssl/{{ xmpp_domain }}.pem"
+{%- endfor %}
+
 ###   SERVER TO SERVER
 ###   ================
 
 {%- if env['EJABBERD_S2S_SSL'] == "true" %}
 s2s_use_starttls: required
-# s2s_certfile: "/opt/ejabberd/ssl/host.pem"
 s2s_protocol_options:
   - "no_sslv2"
   - "no_sslv3"
@@ -168,7 +171,7 @@ auth_method:
 auth_password_format: {{ env.get('EJABBERD_AUTH_PASSWORD_FORMAT', 'scram') }}
 
 {%- if 'anonymous' in env.get('EJABBERD_AUTH_METHOD', 'internal').split() %}
-anonymous_protocol: login_anon
+anonymous_protocol: both
 allow_multiple_connections: true
 {%- endif %}
 
@@ -317,7 +320,7 @@ access:
     all: deny
     admin: allow
     {% else %}
-    all: deny
+    all: allow
     {% endif %}
   ## Only allow to register from localhost
   trusted_network:
@@ -341,7 +344,6 @@ modules:
   mod_announce: # recommends mod_adhoc
     access: announce
   mod_blocking: {} # requires mod_privacy
-  mod_block_strangers: {}
   mod_bosh: {}
   mod_caps: {}
   mod_carboncopy: {}
@@ -352,7 +354,6 @@ modules:
   mod_disco: {}
   ## mod_echo: {}
   mod_irc: {}
-  # mod_http_bind: {}
   ## mod_http_fileserver:
   ##   docroot: "/var/www"
   ##   accesslog: "/var/log/ejabberd/access.log"
@@ -377,7 +378,7 @@ modules:
     access_admin: muc_admin
     history_size: 50
     default_room_options:
-      persistent: false
+      persistent: true
       mam : true
   {%- if env['EJABBERD_MOD_MUC_ADMIN'] == "true" %}
   mod_muc_admin: {}
@@ -413,7 +414,7 @@ modules:
   mod_push:
     include_body: "New message"
   mod_push_keepalive: {}
-  ## mod_register:
+  mod_register:
     ##
     ## Protect In-Band account registrations with CAPTCHA.
     ##
@@ -428,20 +429,20 @@ modules:
     ## After successful registration, the user receives
     ## a message with this subject and body.
     ##
-    ## welcome_message:
-    ##  subject: "Welcome!"
-    ##  body: |-
-    ##    Hi.
-    ##    Welcome to this XMPP server.
+    welcome_message:
+      subject: "Welcome!"
+      body: |-
+        Hi.
+        Welcome to this XMPP server.
 
     ##
     ## Only clients in the server machine can register accounts
     ##
-    ## {%- if env['EJABBERD_REGISTER_TRUSTED_NETWORK_ONLY'] == "true" %}
-    ## ip_access: trusted_network
-    ## {% endif %}
+    {%- if env['EJABBERD_REGISTER_TRUSTED_NETWORK_ONLY'] == "true" %}
+    ip_access: trusted_network
+    {% endif %}
 
-    ## access: register
+    access: register
   mod_roster:
     versioning: true
   mod_s2s_dialback: {}
@@ -465,12 +466,6 @@ modules:
 
 certfiles:
   - "/opt/ejabberd/ssl/*.pem"
-
-# host_config:
-# {%- for xmpp_domain in env['XMPP_DOMAIN'].split() %}
-#   "{{ xmpp_domain }}":
-#     domain_certfile: "/opt/ejabberd/ssl/{{ xmpp_domain }}.pem"
-# {%- endfor %}
 
 {%- if env['EJABBERD_CONFIGURE_ODBC'] == "true" %}
 ###   ====================
