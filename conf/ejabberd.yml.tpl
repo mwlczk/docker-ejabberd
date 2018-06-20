@@ -90,6 +90,12 @@ listen:
   -
     port: 5269
     module: ejabberd_s2s_in
+    {%- if env['EJABBERD_S2S_SSL'] == "true" %}
+  -
+    port: 5270
+    module: ejabberd_s2s_in
+    tls: true
+    {% endif %}
   -
     port: 4560
     module: ejabberd_xmlrpc
