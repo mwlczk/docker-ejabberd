@@ -256,7 +256,6 @@ extauth_cache: {{ env['EJABBERD_EXTAUTH_CACHE'] }}
 shaper:
   normal: 1000
   fast: 50000
-max_fsm_queue: 1000
 
 ###   ====================
 ###   ACCESS CONTROL LISTS
